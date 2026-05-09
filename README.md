@@ -7,6 +7,17 @@
 # 概述
 **UnLua**是适用于UE的一个高度优化的**Lua脚本解决方案**。它遵循UE的编程模式，功能丰富且易于学习，UE程序员可以零学习成本使用。
 
+## UE5.7 适配说明
+本仓库是在 UnLua 基础上做的 UE5.7 兼容修复，主要修改集中在以下几个方面：
+
+* 更新 `Build.cs` 中已废弃的警告配置写法，适配 UE5.7 的模块规则 API。
+* 将依赖引擎内部实现细节的代码迁移到 UE5.7 可用的反射/元数据接口，例如 `FMetaData`、`TFieldIterator`、`TObjectPtr` 等。
+* 替换 UE5.7 已移除或不再推荐使用的旧模板工具和类型判断方式，例如 `TChooseClass`、`TIsTriviallyDestructible`。
+* 修正 UE5.7 下新增的严格编译检查问题，包括 `FString::Printf` 的格式串校验、Lua 内部 `TString` 命名冲突、以及部分反射字段访问方式变化。
+* 同步调整 LuaProtobuf / LuaRapidjson / LuaSocket 等第三方扩展，确保它们能在 UE5.7 下继续编译。
+
+如果你是从原版 UnLua 迁移过来，建议优先查看下方的“文档”与“功能清单”，再根据项目需要合并本分支的 UE5.7 兼容改动。
+
 # 在UE中使用Lua
 * 直接访问所有的UCLASS, UPROPERTY, UFUNCTION, USTRUCT, UENUM，无须胶水代码。
 * 替换蓝图中定义的实现 ( Event / Function )。
