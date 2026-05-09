@@ -1,6 +1,6 @@
 // Tencent is pleased to support the open source community by making UnLua available.
 // 
-// Copyright (C) 2019 Tencent. All rights reserved.
+// Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
 //
 // Licensed under the MIT License (the "License"); 
 // you may not use this file except in compliance with the License. You may obtain a copy of the License at
@@ -67,10 +67,8 @@ void ULuaOverridesClass::AddToOwner()
     if (!Class)
         return;
 
-#if UE_VERSION_NEWER_THAN(5, 2, 1)
-    auto ChildrenPtr = Class->Children.Get();
-
-    auto Field = &ChildrenPtr;
+#if UE_VERSION_NEWER_THAN(5, 2, 0)
+    auto Field = &Class->Children;
 #else
     auto Field = &(Class->Children);
 #endif
@@ -81,7 +79,11 @@ void ULuaOverridesClass::AddToOwner()
             Field = nullptr;
             break;
         }
+#if UE_VERSION_NEWER_THAN(5, 2, 0)
+        Field = &((*Field)->Next);
+#else
         Field = &(*Field)->Next;
+#endif
     }
 
     if (Field)
@@ -97,10 +99,8 @@ void ULuaOverridesClass::RemoveFromOwner()
     if (!Class)
         return;
 
-#if UE_VERSION_NEWER_THAN(5, 2, 1)
-    auto ChildrenPtr = Class->Children.Get();
-
-    auto Field = &ChildrenPtr;
+#if UE_VERSION_NEWER_THAN(5, 2, 0)
+    auto Field = &Class->Children;
 #else
     auto Field = &Class->Children;
 #endif
@@ -111,7 +111,11 @@ void ULuaOverridesClass::RemoveFromOwner()
             *Field = nullptr;
             break;
         }
+#if UE_VERSION_NEWER_THAN(5, 2, 0)
+        Field = &((*Field)->Next);
+#else
         Field = &(*Field)->Next;
+#endif
     }
 
     if (!Class->IsRooted() && !GUObjectArray.IsDisregardForGC(Class))

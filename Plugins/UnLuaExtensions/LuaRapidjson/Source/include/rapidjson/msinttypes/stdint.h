@@ -31,8 +31,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 // The above software in this distribution may have been modified by 
-// Tencent. 
-// All Tencent Modifications are Copyright (C) 2015 Tencent.
+// THL A29 Limited ("Tencent Modifications"). 
+// All Tencent Modifications are Copyright (C) 2015 THL A29 Limited.
 
 #ifndef _MSC_VER // [
 #error "Use this header only with Microsoft Visual C++ compilers!"

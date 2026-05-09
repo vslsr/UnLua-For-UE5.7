@@ -1,6 +1,6 @@
 // Tencent is pleased to support the open source community by making UnLua available.
 // 
-// Copyright (C) 2019 Tencent. All rights reserved.
+// Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
 //
 // Licensed under the MIT License (the "License"); 
 // you may not use this file except in compliance with the License. You may obtain a copy of the License at
@@ -98,10 +98,16 @@ void FFunctionDesc::CallLua(lua_State* L, lua_Integer FunctionRef, lua_Integer S
         FOutParmRec* FirstOut = nullptr;
         FOutParmRec* LastOut = nullptr;
 
-        for (FProperty* Property = (FProperty*)(Function->ChildProperties);
-             *Stack.Code != EX_EndFunctionParms;
-             Property = (FProperty*)(Property->Next))
+        for (TFieldIterator<FProperty> It(Function.Get());
+             It && (It->PropertyFlags & CPF_Parm) && (*Stack.Code != EX_EndFunctionParms);
+             ++It)
         {
+            FProperty* Property = *It;
+            if (Property->HasAnyPropertyFlags(CPF_ReturnParm))
+            {
+                continue;
+            }
+
             if (Property->PropertyFlags & CPF_OutParm)
             {
                 Stack.Step(Stack.Object, Property->ContainerPtrToValuePtr<uint8>(InParms));

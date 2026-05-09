@@ -14,7 +14,7 @@
 #endif /* PB_NS_BEGIN */
 
 #ifndef PB_STATIC
-# if __GNUC__
+# if defined(__GNUC__) && __GNUC__
 #   define PB_STATIC static __attribute((unused))
 # else
 #   define PB_STATIC static

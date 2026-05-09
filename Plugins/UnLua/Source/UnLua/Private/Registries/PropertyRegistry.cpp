@@ -110,13 +110,13 @@ namespace UnLua
 #endif
                 nullptr,
                 nullptr,
-#if UE_VERSION_NEWER_THAN(5, 2, 1)
+#if UE_VERSION_NEWER_THAN(5, 2, 0)
                 1,
 #endif
                 sizeof(bool),
                 sizeof(FPropertyCollector),
                 nullptr,
-#if UE_VERSION_NEWER_THAN(5, 2, 1)
+#if UE_VERSION_NEWER_THAN(5, 2, 0)
                 METADATA_PARAMS(0, nullptr)
 #else
                 METADATA_PARAMS(nullptr, 0)
@@ -148,11 +148,11 @@ namespace UnLua
 #endif
                 nullptr,
                 nullptr,
-#if UE_VERSION_NEWER_THAN(5, 2, 1)
+#if UE_VERSION_NEWER_THAN(5, 2, 0)
                 1,
 #endif
                 0,
-#if UE_VERSION_NEWER_THAN(5, 2, 1)
+#if UE_VERSION_NEWER_THAN(5, 2, 0)
                 METADATA_PARAMS(0, nullptr)
 #else
                 METADATA_PARAMS(nullptr, 0)
@@ -184,11 +184,11 @@ namespace UnLua
 #endif
                 nullptr,
                 nullptr,
-#if UE_VERSION_NEWER_THAN(5, 2, 1)
+#if UE_VERSION_NEWER_THAN(5, 2, 0)
                 1,
 #endif
                 0,
-#if UE_VERSION_NEWER_THAN(5, 2, 1)
+#if UE_VERSION_NEWER_THAN(5, 2, 0)
                 METADATA_PARAMS(0, nullptr)
 #else
                 METADATA_PARAMS(nullptr, 0)
@@ -220,11 +220,11 @@ namespace UnLua
 #endif
                 nullptr,
                 nullptr,
-#if UE_VERSION_NEWER_THAN(5, 2, 1)
+#if UE_VERSION_NEWER_THAN(5, 2, 0)
                 1,
 #endif
                 0,
-#if UE_VERSION_NEWER_THAN(5, 2, 1)
+#if UE_VERSION_NEWER_THAN(5, 2, 0)
                 METADATA_PARAMS(0, nullptr)
 #else
                 METADATA_PARAMS(nullptr, 0)
@@ -256,11 +256,11 @@ namespace UnLua
 #endif
                 nullptr,
                 nullptr,
-#if UE_VERSION_NEWER_THAN(5, 2, 1)
+#if UE_VERSION_NEWER_THAN(5, 2, 0)
                 1,
 #endif
                 0,
-#if UE_VERSION_NEWER_THAN(5, 2, 1)
+#if UE_VERSION_NEWER_THAN(5, 2, 0)
                 METADATA_PARAMS(0, nullptr)
 #else
                 METADATA_PARAMS(nullptr, 0)
@@ -292,17 +292,17 @@ namespace UnLua
 #endif
                 nullptr,
                 nullptr,
-#if UE_VERSION_NEWER_THAN(5, 2, 1)
+#if UE_VERSION_NEWER_THAN(5, 2, 0)
                 1,
 #endif
                 0,
-#if UE_VERSION_NEWER_THAN(5, 2, 1)
+#if UE_VERSION_NEWER_THAN(5, 2, 0)
                 METADATA_PARAMS(0, nullptr)
 #else
                 METADATA_PARAMS(nullptr, 0)
 #endif
             };
-#if UE_VERSION_NEWER_THAN(5, 2, 1)
+#if UE_VERSION_NEWER_THAN(5, 2, 0)
             const auto Property = new FTextProperty(PropertyCollector, "", RF_Transient);
 #else
             const auto Property = new FTextProperty(PropertyCollector, Params);
@@ -336,12 +336,12 @@ namespace UnLua
 #endif
                 nullptr,
                 nullptr,
-#if UE_VERSION_NEWER_THAN(5, 2, 1)
+#if UE_VERSION_NEWER_THAN(5, 2, 0)
                 1,
 #endif
                 0,
                 nullptr,
-#if UE_VERSION_NEWER_THAN(5, 2, 1)
+#if UE_VERSION_NEWER_THAN(5, 2, 0)
                 METADATA_PARAMS(0, nullptr)
 #else
                 METADATA_PARAMS(nullptr, 0)
@@ -371,12 +371,12 @@ namespace UnLua
 #endif
                 nullptr,
                 nullptr,
-#if UE_VERSION_NEWER_THAN(5, 2, 1)
+#if UE_VERSION_NEWER_THAN(5, 2, 0)
                 1,
 #endif
                 0,
                 nullptr,
-#if UE_VERSION_NEWER_THAN(5, 2, 1)
+#if UE_VERSION_NEWER_THAN(5, 2, 0)
                 METADATA_PARAMS(0, nullptr)
 #else
                 METADATA_PARAMS(nullptr, 0)
@@ -390,8 +390,9 @@ namespace UnLua
         }
         else if (const auto Enum = Cast<UEnum>(Field))
         {
-            const auto EnumProperty = new FEnumProperty(PropertyCollector, NAME_None, RF_Transient, 0, CPF_HasGetValueTypeHash, Enum);
+            const auto EnumProperty = new FEnumProperty(PropertyCollector, NAME_None, RF_Transient);
             const auto UnderlyingProperty = new FByteProperty(EnumProperty, TEXT("UnderlyingType"), RF_Transient);
+            EnumProperty->SetEnum(Enum);
             Property = EnumProperty;
             Property->AddCppProperty(UnderlyingProperty);
             Property->ElementSize = UnderlyingProperty->ElementSize;

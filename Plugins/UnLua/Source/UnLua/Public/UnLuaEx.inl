@@ -1,6 +1,6 @@
 // Tencent is pleased to support the open source community by making UnLua available.
 // 
-// Copyright (C) 2019 Tencent. All rights reserved.
+// Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
 //
 // Licensed under the MIT License (the "License"); 
 // you may not use this file except in compliance with the License. You may obtain a copy of the License at
@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and limitations under the License.
 
 #include "UnLuaDebugBase.h"
+#include <type_traits>
 
 namespace UnLua
 {
@@ -94,7 +95,8 @@ namespace UnLua
     {
         static void Generate(FString &Buffer, int32 Index)
         {
-            FString TypeName = TTypeIntelliSense<typename TChooseClass<TIsPointer<T1>::Value, typename TDecay<typename TRemovePointer<T1>::Type>::Type*, typename TDecay<T1>::Type>::Result>::GetName();
+            using IntelliSenseArgType = std::conditional_t<TIsPointer<T1>::Value, typename TDecay<typename TRemovePointer<T1>::Type>::Type*, typename TDecay<T1>::Type>;
+            FString TypeName = TTypeIntelliSense<IntelliSenseArgType>::GetName();
             Buffer += FString::Printf(TEXT("---@param P%d %s %s\r\n"), Index, *TypeName, *TArgumentComment<T1>::Get());
             TArgumentIntelliSense<T2...>::Generate(Buffer, Index + 1);
         }
@@ -123,7 +125,8 @@ namespace UnLua
         }
 
         // return 
-        FString ReturnTypeName = TTypeIntelliSense<typename TChooseClass<TIsPointer<RetType>::Value, typename TDecay<typename TRemovePointer<RetType>::Type>::Type*, typename TDecay<RetType>::Type>::Result>::GetName();
+        using IntelliSenseReturnType = std::conditional_t<TIsPointer<RetType>::Value, typename TDecay<typename TRemovePointer<RetType>::Type>::Type*, typename TDecay<RetType>::Type>;
+        FString ReturnTypeName = TTypeIntelliSense<IntelliSenseReturnType>::GetName();
         if (ReturnTypeName.Len() > 0)
         {
             Buffer += FString::Printf(TEXT("---@return %s\r\n"), *ReturnTypeName);
@@ -208,7 +211,8 @@ namespace UnLua
         static int32 Invoke(lua_State *L, const TFunction<RetType(ArgType...)> &Func, TTuple<typename TArgTypeTraits<ArgType>::Type...> &Args, TIndices<N...> ParamIndices)
         {
             int32 Num = 0;
-            std::remove_cv_t<RetType> *RetValPtr = lua_gettop(L) > sizeof...(ArgType) ? UnLua::Get(L, sizeof...(ArgType) + 1, TType<std::remove_cv_t<RetType>*>()) : nullptr;
+            using RetValueType = std::remove_const_t<RetType>;
+            RetValueType *RetValPtr = lua_gettop(L) > sizeof...(ArgType) ? UnLua::Get(L, sizeof...(ArgType) + 1, TType<RetValueType*>()) : nullptr;
             if (RetValPtr)
             {
                 *RetValPtr = UnLua::Invoke(Func, Args, typename TZeroBasedIndices<sizeof...(ArgType)>::Type());
@@ -880,7 +884,14 @@ namespace UnLua
     template <bool bIsReflected>
     void TExportedClassBase<bIsReflected>::GenerateIntelliSense(FString &Buffer) const
     {
-        GenerateIntelliSenseInternal(Buffer, typename TChooseClass<bIsReflected, FTrue, FFalse>::Result());
+        if constexpr (bIsReflected)
+        {
+            GenerateIntelliSenseInternal(Buffer, FTrue());
+        }
+        else
+        {
+            GenerateIntelliSenseInternal(Buffer, FFalse());
+        }
     }
 
     template <bool bIsReflected>
@@ -951,7 +962,14 @@ namespace UnLua
     TExportedClass<bIsReflected, ClassType, CtorArgType...>::TExportedClass(const char *InName, const char *InSuperClassName)
         : FExportedClassBase(InName, InSuperClassName)
     {
-        AddDefaultFunctions(typename TChooseClass<bIsReflected, FTrue, FFalse>::Result());
+        if constexpr (bIsReflected)
+        {
+            AddDefaultFunctions(FTrue());
+        }
+        else
+        {
+            AddDefaultFunctions(FFalse());
+        }
     }
 
     template <bool bIsReflected, typename ClassType, typename... CtorArgType>
@@ -1029,14 +1047,36 @@ namespace UnLua
     template <bool bIsReflected, typename ClassType, typename... CtorArgType>
     void TExportedClass<bIsReflected, ClassType, CtorArgType...>::AddDefaultFunctions(FFalse NotReflected)
     {
-        AddConstructor(typename TChooseClass<TIsConstructible<ClassType, CtorArgType...>::Value, FTrue, FFalse>::Result());
-        AddDestructor(typename TChooseClass<TAnd<TIsDestructible<ClassType>, TNot<TIsTriviallyDestructible<ClassType>>>::Value, FFalse, FTrue>::Result());
+        if constexpr (TIsConstructible<ClassType, CtorArgType...>::Value)
+        {
+            AddConstructor(FTrue());
+        }
+        else
+        {
+            AddConstructor(FFalse());
+        }
+
+        if constexpr (TIsDestructible<ClassType>::Value && !std::is_trivially_destructible_v<ClassType>)
+        {
+            AddDestructor(FFalse());
+        }
+        else
+        {
+            AddDestructor(FTrue());
+        }
     }
 
     template <bool bIsReflected, typename ClassType, typename... CtorArgType>
     void TExportedClass<bIsReflected, ClassType, CtorArgType...>::AddDefaultFunctions(FTrue Reflected)
     {
-        AddDefaultFunctions_Reflected(typename TChooseClass<TPointerIsConvertibleFromTo<ClassType, UObject>::Value, FTrue, FFalse>::Result());
+        if constexpr (TPointerIsConvertibleFromTo<ClassType, UObject>::Value)
+        {
+            AddDefaultFunctions_Reflected(FTrue());
+        }
+        else
+        {
+            AddDefaultFunctions_Reflected(FFalse());
+        }
     }
 
     template <bool bIsReflected, typename ClassType, typename... CtorArgType>
@@ -1045,7 +1085,14 @@ namespace UnLua
         int32 NumArgs = sizeof...(CtorArgType);
         if (NumArgs > 0)
         {
-            AddConstructor(typename TChooseClass<TIsConstructible<ClassType, CtorArgType...>::Value, FTrue, FFalse>::Result());
+            if constexpr (TIsConstructible<ClassType, CtorArgType...>::Value)
+            {
+                AddConstructor(FTrue());
+            }
+            else
+            {
+                AddConstructor(FFalse());
+            }
         }
     }
 

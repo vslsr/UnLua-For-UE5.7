@@ -1,6 +1,6 @@
 // Tencent is pleased to support the open source community by making UnLua available.
 // 
-// Copyright (C) 2019 Tencent. All rights reserved.
+// Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
 //
 // Licensed under the MIT License (the "License"); 
 // you may not use this file except in compliance with the License. You may obtain a copy of the License at
@@ -19,6 +19,7 @@
 #include "UnLuaTemplate.h"
 #include "LuaValue.h"
 #include "LuaEnv.h"
+#include <type_traits>
 
 namespace UnLua
 {
@@ -831,7 +832,7 @@ namespace UnLua
         virtual bool IsTriviallyDestructible() const override
         {
             static_assert(TIsDestructible<T>::Value, "type must be destructible!");
-            return TIsTriviallyDestructible<T>::Value;
+            return std::is_trivially_destructible<T>::value;
         }
 
         virtual int32 GetSize() const override { return sizeof(T); }
@@ -853,18 +854,39 @@ namespace UnLua
         virtual void Destruct(void* Dest) const override
         {
             static_assert(TIsDestructible<T>::Value, "type must be destructible!");
-            DestructInternal((T*)Dest, typename TChooseClass<TIsTriviallyDestructible<T>::Value, FTrue, FFalse>::Result());
+            if constexpr (std::is_trivially_destructible_v<T>)
+            {
+                DestructInternal((T*)Dest, FTrue());
+            }
+            else
+            {
+                DestructInternal((T*)Dest, FFalse());
+            }
         }
 
         virtual void Copy(void* Dest, const void* Src) const override
         {
             static_assert(TIsCopyConstructible<T>::Value, "type must be copy constructible!");
-            CopyInternal((T*)Dest, (const T*)Src, typename TChooseClass<TIsTriviallyCopyConstructible<T>::Value, FTrue, FFalse>::Result());
+            if constexpr (TIsTriviallyCopyConstructible<T>::Value)
+            {
+                CopyInternal((T*)Dest, (const T*)Src, FTrue());
+            }
+            else
+            {
+                CopyInternal((T*)Dest, (const T*)Src, FFalse());
+            }
         }
 
         virtual bool Identical(const void* A, const void* B) const override
         {
-            return IdenticalInternal((const T*)A, (const T*)B, typename TChooseClass<THasEqualityOperator<T>::Value, FTrue, FFalse>::Result());
+            if constexpr (THasEqualityOperator<T>::Value)
+            {
+                return IdenticalInternal((const T*)A, (const T*)B, FTrue());
+            }
+            else
+            {
+                return IdenticalInternal((const T*)A, (const T*)B, FFalse());
+            }
         }
 
         virtual FString GetName() const override { return FString(TType<typename TDecay<T>::Type>::GetName()); }
@@ -890,7 +912,14 @@ namespace UnLua
         {
             static_assert(TIsCopyConstructible<T>::Value, "type must be copy constructible!");
             T V = UnLua::Get(L, IndexInStack, TType<T>());
-            CopyInternal((T*)ValuePtr, &V, typename TChooseClass<TIsTriviallyCopyConstructible<T>::Value, FTrue, FFalse>::Result());
+            if constexpr (TIsTriviallyCopyConstructible<T>::Value)
+            {
+                CopyInternal((T*)ValuePtr, &V, FTrue());
+            }
+            else
+            {
+                CopyInternal((T*)ValuePtr, &V, FFalse());
+            }
             return false;
         }
 

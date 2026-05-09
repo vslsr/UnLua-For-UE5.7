@@ -1,6 +1,6 @@
 ﻿// Tencent is pleased to support the open source community by making UnLua available.
 // 
-// Copyright (C) 2019 Tencent. All rights reserved.
+// Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
 //
 // Licensed under the MIT License (the "License"); 
 // you may not use this file except in compliance with the License. You may obtain a copy of the License at
@@ -19,6 +19,7 @@
 #include "UnLuaModule.h"
 #include "ReflectionUtils/PropertyDesc.h"
 #include "Misc/EngineVersionComparison.h"
+#include "UObject/MetaData.h"
 
 static constexpr uint8 ScriptMagicHeader[] = {EX_StringConst, 'L', 'U', 'A', '\0', EX_UInt64Const};
 static constexpr size_t ScriptMagicHeaderSize = sizeof ScriptMagicHeader;
@@ -141,7 +142,7 @@ void ULuaFunction::Override(UFunction* Function, UClass* Class, bool bAddNew)
     check(Function && Class && !From.IsValid());
 
 #if WITH_METADATA
-    UMetaData::CopyMetadata(Function, this);
+    FMetaData::CopyMetadata(Function, this);
 #endif
 
     bActivated = false;
@@ -225,9 +226,11 @@ void ULuaFunction::SetActive(const bool bActive)
         {
             SetSuperStruct(Function->GetSuperStruct());
             Script = Function->Script;
+#if UE_VERSION_OLDER_THAN(5, 7, 0)
             Children = Function->Children;
             ChildProperties = Function->ChildProperties;
             PropertyLink = Function->PropertyLink;
+#endif
 
             Function->FunctionFlags |= FUNC_Native;
             Function->SetNativeFunc(&execScriptCallLua);
@@ -247,8 +250,10 @@ void ULuaFunction::SetActive(const bool bActive)
         }
         else
         {
+#if UE_VERSION_OLDER_THAN(5, 7, 0)
             Children = nullptr;
             ChildProperties = nullptr;
+#endif
 
             Function->Script = Script;
             Function->SetNativeFunc(Overridden->GetNativeFunc());
@@ -262,11 +267,13 @@ void ULuaFunction::SetActive(const bool bActive)
 
 void ULuaFunction::FinishDestroy()
 {
+#if UE_VERSION_OLDER_THAN(5, 7, 0)
     if (bActivated && !bAdded)
     {
         Children = nullptr;
         ChildProperties = nullptr;
     }
+#endif
     UFunction::FinishDestroy();
 }
 
@@ -286,7 +293,7 @@ void ULuaFunction::Bind()
     }
     else
     {
-#if UE_VERSION_NEWER_THAN(5, 2, 1)
+#if UE_VERSION_NEWER_THAN(5, 2, 0)
         Super::Bind();
 #else
         SetNativeFunc(ProcessInternal);

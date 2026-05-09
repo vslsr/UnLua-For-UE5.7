@@ -1,6 +1,6 @@
 ﻿// Tencent is pleased to support the open source community by making UnLua available.
 // 
-// Copyright (C) 2019 Tencent. All rights reserved.
+// Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
 //
 // Licensed under the MIT License (the "License"); 
 // you may not use this file except in compliance with the License. You may obtain a copy of the License at
@@ -29,11 +29,17 @@
 #include "UnLuaLegacy.h"
 #include "UnLuaLib.h"
 #include "UnLuaSettings.h"
+#define TString LuaInternalTString
 #include "lstate.h"
+#undef TString
 
 namespace UnLua
 {
+#if UE_VERSION_NEWER_THAN(5, 6, 0)
+    constexpr EInternalObjectFlags AsyncObjectFlags = EInternalObjectFlags::Async;
+#else
     constexpr EInternalObjectFlags AsyncObjectFlags = EInternalObjectFlags::AsyncLoading | EInternalObjectFlags::Async;
+#endif
 
     TMap<lua_State*, FLuaEnv*> FLuaEnv::AllEnvs;
     FLuaEnv::FOnCreated FLuaEnv::OnCreated;

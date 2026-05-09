@@ -1,6 +1,6 @@
 // Tencent is pleased to support the open source community by making UnLua available.
 // 
-// Copyright (C) 2019 Tencent. All rights reserved.
+// Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
 //
 // Licensed under the MIT License (the "License"); 
 // you may not use this file except in compliance with the License. You may obtain a copy of the License at
@@ -91,7 +91,7 @@ namespace UnLua
     template <typename T> struct TArgTypeTraits
     {
         typedef typename TDecay<T>::Type RT;
-        typedef typename TChooseClass<TIsPrimitiveTypeOrPointer<RT>::Value, RT, typename std::remove_cv<T>::type>::Result Type;
+        using Type = std::conditional_t<TIsPrimitiveTypeOrPointer<RT>::Value, RT, typename std::remove_cv<T>::type>;
     };
     
     
